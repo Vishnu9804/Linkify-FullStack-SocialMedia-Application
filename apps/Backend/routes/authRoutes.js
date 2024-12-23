@@ -57,4 +57,28 @@ router.post("/verify", (req, res) => {
   });
 });
 
+router.post("/signup", async (req, res) => {
+  const { username, password, email } = req.body;
+  if (!username || !password || !email) {
+    return res.status(422).json({ error: "Please add all the fields" });
+  } else {
+    const user = new User({
+      username,
+      email,
+      password,
+    });
+
+    try {
+      await user.save();
+      const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
+      return res
+        .status(200)
+        .json({ message: "User Registered Successfully", token });
+    } catch (err) {
+      console.log(err);
+      return res.status(422).json({ error: "User Not Registered" });
+    }
+  }
+});
+
 module.exports = router;
