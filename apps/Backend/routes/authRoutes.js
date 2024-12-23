@@ -2,6 +2,34 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const User = mongoose.model("User");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const nodemailer = require("nodemailer");
+const bcrypt = require("bcrypt");
+
+async function mailer(reciveremail, code) {
+  let transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+
+    secure: false,
+    requireTLS: true,
+    auth: {
+      user: process.env.NodeMailer_email,
+      pass: process.env.NodeMailer_password,
+    },
+  });
+
+  let info = await transporter.sendMail({
+    from: "GeekChat",
+    to: `${reciveremail}`,
+    subject: "Email Verification",
+    text: `Your Verification Code is ${code}`,
+    html: `<b>Your Verification Code is ${code}</b>`,
+  });
+  console.log("Message Sent: %s", info.messageId);
+  console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+}
 
 router.post("/verify", (req, res) => {
   console.log("sent by client", req.body);
@@ -28,3 +56,5 @@ router.post("/verify", (req, res) => {
     }
   });
 });
+
+module.exports = router;
