@@ -132,4 +132,18 @@ router.post("/resetpass", (req, res) => {
   }
 });
 
+router.post("/changeusername", (req, res) => {
+  const { username, email } = req.body;
+
+  User.find({ username }).then((savedUser) => {
+    if (savedUser.length > 0) {
+      return res.status(422).json({ error: "Username Already Exist" });
+    } else {
+      return res
+        .status(200)
+        .json({ message: "Username Available", username, email });
+    }
+  });
+});
+
 module.exports = router;
