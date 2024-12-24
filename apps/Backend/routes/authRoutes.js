@@ -81,4 +81,55 @@ router.post("/signup", async (req, res) => {
   }
 });
 
+router.post("/verifyfp", (req, res) => {
+  console.log("sent by client", req.body);
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(422).json({ error: "Please add all the fields" });
+  }
+
+  User.findOne({ email: email }).then(async (savedUser) => {
+    if (savedUser) {
+      try {
+        let VerificationCode = Math.floor(100000 + Math.random() * 900000);
+        await mailer(email, VerificationCode);
+        console.log("Verification Code", VerificationCode);
+        res.send({
+          message: "Verification Code Sent to your Email",
+          VerificationCode,
+          email,
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    } else {
+      return res.status(422).json({ error: "Invalid Credentials" });
+    }
+  });
+});
+
+router.post("/resetpass", (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(422).json({ error: "Please Enter Required Fields!!!!" });
+  } else {
+    User.findOne({ email: email }).then(async (savedUser) => {
+      if (savedUser) {
+        savedUser.password = password;
+        savedUser
+          .save()
+          .then((user) => {
+            res.json({ message: "Password Updated Succefully!!!!" });
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      } else {
+        res.status(422).json({ error: "Invalid Credential" });
+      }
+    });
+  }
+});
+
 module.exports = router;
