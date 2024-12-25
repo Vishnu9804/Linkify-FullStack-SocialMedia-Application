@@ -146,4 +146,41 @@ router.post("/changeusername", (req, res) => {
   });
 });
 
+router.post("/signin", (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(422).json({ error: "Please add all the fields" });
+  } else {
+    User.findOne({ email: email })
+      .then((savedUser) => {
+        if (!savedUser) {
+          return res.status(422).json({ error: "Invalid Credentials" });
+        } else {
+          console.log(savedUser);
+          bcrypt.compare(password, savedUser.password).then((doMatch) => {
+            if (doMatch) {
+              const token = jwt.sign(
+                { _id: savedUser._id },
+                process.env.JWT_SECRET
+              );
+
+              const { _id, username, email } = savedUser;
+
+              res.json({
+                message: "Successfully Signed In",
+                token,
+                user: { _id, username, email },
+              });
+            } else {
+              return res.status(422).json({ error: "Invalid Credentials" });
+            }
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+});
+
 module.exports = router;
